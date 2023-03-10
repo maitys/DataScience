@@ -1,5 +1,6 @@
+import os
 from flat_classes import Bill, Flatmate
-from report_classes import PdfReport
+from report_classes import PdfReport, FileSharer
 
 
 print("*** Welcome to the Flatmates Bill Calculator ***")
@@ -26,3 +27,6 @@ print(flatmate2.name, " pays: $", flatmate2_pays)
 
 pdf_report = PdfReport(filename="{period}.pdf".format(period=month_bill.period))
 pdf_report.generate(flatmate1=flatmate1, flatmate2=flatmate2, total_bill=month_bill)
+
+file_sharer = FileSharer(filepath= os.path.join(os.path.dirname(__file__), "files\{}".format(pdf_report.filename)))
+print(file_sharer.share())
