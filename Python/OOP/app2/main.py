@@ -1,99 +1,28 @@
-import os
-import webbrowser
-from fpdf import FPDF
+from flat_classes import Bill, Flatmate
+from report_classes import PdfReport
 
 
-############################################
-#### Class: Bill ####
-############################################
-class Bill:
-    """
-    Object that represents a single bill amount and period of the bill
-    amount: float
-    period: str
-    """
-    
-    def __init__(self, amount, period):
-        self.amount = amount
-        self.period = period
+print("*** Welcome to the Flatmates Bill Calculator ***")
+amount = float(input("Hey user, enter the bill amount: "))
+period = input("What is the bill period? E.g. January 2021: ")
+name_flatmate1 = input("What is the name of the 1st flatmate? ")
+days_in_house1 = int(input("How many days has the 1st flatmate stayed in the house during the bill period? "))
+name_flatmate2 = input("What is the name of the 2nd flatmate? ")
+days_in_house2 = int(input("How many days has the 2nd flatmate stayed in the house during the bill period? "))
 
-############################################
-#### Class: Flatmate ####
-############################################
-class Flatmate:
-    """
-    Object that represents a single flatmate person and pays a share of the bill
-    name: str
-    days_in_house: int
-    """
-    
-    def __init__(self, name, days_in_house):
-        self.name = name
-        self.days_in_house = days_in_house
+print("\n*** Data entered ***")
+print("Total bill: $", amount, " for ", period)
+print("Flatmate 1: ", name_flatmate1, " stayed ", days_in_house1, " days")
+print("Flatmate 2: ", name_flatmate2, " stayed ", days_in_house2, " days")
 
-    def pays(self, total_bill, other_flatmate):
-        weight = self.days_in_house / (self.days_in_house + other_flatmate.days_in_house)
-        to_pay =  round(total_bill.amount * weight, 2)
-        return to_pay
-    
-############################################
-#### Class: PdfReport ####
-############################################
-class PdfReport:
-    """
-    Create a PDF report of the bill with the period, name of the flatmate and amount of money each flatmate has to pay
-    """
-    def __init__(self, filename):
-        self.filename = filename
-        
-    def generate(self, flatmate1, flatmate2, total_bill):
-        
-        pdf = FPDF(orientation='P', unit='pt', format='A4') # initilize the pdf object
-        pdf.add_page() # add a page
-        
-        # Add iccon to the pdf
-        pdf.image(os.path.join(os.path.dirname(__file__), 'house.png'), w=30, h=30)
-        
-        pdf.set_font(family='Times', style='B', size=24)
+print("\n*** Calculating the bill...***")
+month_bill = Bill(amount=amount, period=period)
+flatmate1 = Flatmate(name=name_flatmate1, days_in_house=days_in_house1)
+flatmate2 = Flatmate(name=name_flatmate2, days_in_house=days_in_house2)
+flatmate1_pays = flatmate1.pays(month_bill, other_flatmate=flatmate2)
+flatmate2_pays = flatmate2.pays(month_bill, other_flatmate=flatmate1)
+print(flatmate1.name, " pays: $", flatmate1_pays)
+print(flatmate2.name, " pays: $", flatmate2_pays)
 
-        # Add a title
-        pdf.cell(w=0, h=60, txt='Flatmates Bill', border=1, align="C", ln=1) # ln=1 means new line
-
-        # Add the period and value
-        pdf.set_font(family='Arial', style='B', size=12)
-        pdf.set_text_color(0, 0, 0) # black
-        pdf.cell(w=50, h=25, txt='Period', border=1, align="L", ln=0)
-        pdf.cell(w=100, h=25, txt=total_bill.period, border=1, align="L", ln=1)
-        
-        # Add the name and amount for flatmate 1
-        pdf.set_font(family='Times', style='I', size=12)
-        pdf.set_text_color(255, 0, 0) # red
-        flatmate1_pay = str(round(flatmate1.pays(total_bill, flatmate2),1))
-        pdf.cell(w=50, h=25, txt=flatmate1.name, border=1, align="L", ln=0)
-        pdf.cell(w=100, h=25, txt="$ " + flatmate1_pay , border=1, align="L", ln=1)
-        
-        # Add the name and amount for flatmate 2
-        pdf.set_font(family='Times', style='I', size=12)
-        pdf.set_text_color(255, 0, 0) # red
-        flatmate2_pay = str(round(flatmate2.pays(total_bill, flatmate1),1))
-        pdf.cell(w=50, h=25, txt=flatmate2.name, border=1, align="L", ln=0)
-        pdf.cell(w=100, h=25, txt="$ " + flatmate2_pay, border=1, align="L", ln=1)
-
-        # save pdf in the same directory as this file
-        pdf.output(os.path.join(os.path.dirname(__file__), self.filename))
-        # webbrowser.open(os.path.join(os.path.dirname(__file__), self.filename)) # open the pdf file in the browser
-
-
-#######################################################
-##### Below is the code to test the above classes #####
-#######################################################
-march_bill = Bill(amount=120, period="March 2021")
-print(march_bill.amount)
-john = Flatmate(name="John", days_in_house=20)
-marry = Flatmate(name="Marry", days_in_house=25)
-print(john.name)
-print(marry.name)
-print(john.pays(march_bill, other_flatmate=marry))
-print(marry.pays(march_bill, other_flatmate=john))
-pdf_report = PdfReport(filename="flatmates_bill.pdf")
-pdf_report.generate(flatmate1=john, flatmate2=marry, total_bill=march_bill)
+pdf_report = PdfReport(filename="{period}.pdf".format(period=month_bill.period))
+pdf_report.generate(flatmate1=flatmate1, flatmate2=flatmate2, total_bill=month_bill)
